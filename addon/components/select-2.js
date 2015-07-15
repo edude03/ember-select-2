@@ -467,6 +467,7 @@ var Select2Component = Ember.Component.extend({
       value = data;
     }
 
+    this.set('contentInFlight', false)
     this.set("value", value);
     Ember.run.schedule('actions', this, function() {
       this.sendAction('didSelect', value, this);
@@ -478,10 +479,16 @@ var Select2Component = Ember.Component.extend({
    * use the "data" API, otherwise just set the "val" property and let the
    * "initSelection" figure out which object was meant by that.
    */
-  valueChanged: function() {
+  valueChanged: function(obj, key) {
     var self = this,
         value = this.get("value"),
         optionValuePath = this.get("optionValuePath");
+
+    // If 'content did change' while 'content is inflight'
+    // wait until content is settled to deal with the change
+    if (/content/.test(key) && this.get('contentInFlight')){
+      return;
+    }
 
     if (Ember.PromiseProxyMixin.detect(value)) {
       // schedule re-setting value after promise is settled
